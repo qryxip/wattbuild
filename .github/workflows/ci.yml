@@ -49,36 +49,21 @@ jobs:
         python-version:
           - '3.6'
           - '3.9'
-        sccache:
-          - false
-          - true
         include:
-          - { toolchain: 1.42.0-x86_64-pc-windows-msvc  , python-version: '3.6', sccache: false, os: windows-2019 }
-          - { toolchain: 1.42.0-x86_64-apple-darwin     , python-version: '3.6', sccache: false, os: macos-10.15  }
-          - { toolchain: 1.42.0-x86_64-unknown-linux-gnu, python-version: '3.6', sccache: false, os: ubuntu-20.04 }
-          - { toolchain: 1.42.0-x86_64-pc-windows-msvc  , python-version: '3.6', sccache: true , os: windows-2019 }
-          - { toolchain: 1.42.0-x86_64-apple-darwin     , python-version: '3.6', sccache: true , os: macos-10.15  }
-          - { toolchain: 1.42.0-x86_64-unknown-linux-gnu, python-version: '3.6', sccache: true , os: ubuntu-20.04 }
-          - { toolchain: 1.42.0-x86_64-pc-windows-msvc  , python-version: '3.9', sccache: false, os: windows-2019 }
-          - { toolchain: 1.42.0-x86_64-apple-darwin     , python-version: '3.9', sccache: false, os: macos-10.15  }
-          - { toolchain: 1.42.0-x86_64-unknown-linux-gnu, python-version: '3.9', sccache: false, os: ubuntu-20.04 }
-          - { toolchain: 1.42.0-x86_64-pc-windows-msvc  , python-version: '3.9', sccache: true , os: windows-2019 }
-          - { toolchain: 1.42.0-x86_64-apple-darwin     , python-version: '3.9', sccache: true , os: macos-10.15  }
-          - { toolchain: 1.42.0-x86_64-unknown-linux-gnu, python-version: '3.9', sccache: true , os: ubuntu-20.04 }
-          - { toolchain: stable-x86_64-pc-windows-msvc  , python-version: '3.6', sccache: false, os: windows-2019 }
-          - { toolchain: stable-x86_64-apple-darwin     , python-version: '3.6', sccache: false, os: macos-10.15  }
-          - { toolchain: stable-x86_64-unknown-linux-gnu, python-version: '3.6', sccache: false, os: ubuntu-20.04 }
-          - { toolchain: stable-x86_64-pc-windows-msvc  , python-version: '3.6', sccache: true , os: windows-2019 }
-          - { toolchain: stable-x86_64-apple-darwin     , python-version: '3.6', sccache: true , os: macos-10.15  }
-          - { toolchain: stable-x86_64-unknown-linux-gnu, python-version: '3.6', sccache: true , os: ubuntu-20.04 }
-          - { toolchain: stable-x86_64-pc-windows-msvc  , python-version: '3.9', sccache: false, os: windows-2019 }
-          - { toolchain: stable-x86_64-apple-darwin     , python-version: '3.9', sccache: false, os: macos-10.15  }
-          - { toolchain: stable-x86_64-unknown-linux-gnu, python-version: '3.9', sccache: false, os: ubuntu-20.04 }
-          - { toolchain: stable-x86_64-pc-windows-msvc  , python-version: '3.9', sccache: true , os: windows-2019 }
-          - { toolchain: stable-x86_64-apple-darwin     , python-version: '3.9', sccache: true , os: macos-10.15  }
-          - { toolchain: stable-x86_64-unknown-linux-gnu, python-version: '3.9', sccache: true , os: ubuntu-20.04 }
+          - { toolchain: 1.42.0-x86_64-pc-windows-msvc  , python-version: '3.6', os: windows-2019 }
+          - { toolchain: 1.42.0-x86_64-apple-darwin     , python-version: '3.6', os: macos-10.15  }
+          - { toolchain: 1.42.0-x86_64-unknown-linux-gnu, python-version: '3.6', os: ubuntu-20.04 }
+          - { toolchain: 1.42.0-x86_64-pc-windows-msvc  , python-version: '3.9', os: windows-2019 }
+          - { toolchain: 1.42.0-x86_64-apple-darwin     , python-version: '3.9', os: macos-10.15  }
+          - { toolchain: 1.42.0-x86_64-unknown-linux-gnu, python-version: '3.9', os: ubuntu-20.04 }
+          - { toolchain: stable-x86_64-pc-windows-msvc  , python-version: '3.6', os: windows-2019 }
+          - { toolchain: stable-x86_64-apple-darwin     , python-version: '3.6', os: macos-10.15  }
+          - { toolchain: stable-x86_64-unknown-linux-gnu, python-version: '3.6', os: ubuntu-20.04 }
+          - { toolchain: stable-x86_64-pc-windows-msvc  , python-version: '3.9', os: windows-2019 }
+          - { toolchain: stable-x86_64-apple-darwin     , python-version: '3.9', os: macos-10.15  }
+          - { toolchain: stable-x86_64-unknown-linux-gnu, python-version: '3.9', os: ubuntu-20.04 }
 
-    name: ${{ matrix.toolchain }}, ${{ matrix.python-version }}, ${{ matrix.sccache }}
+    name: Rust `${{ matrix.toolchain }}`, Python ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -98,59 +83,10 @@ jobs:
           profile: minimal
           components: clippy
 
-      - name: Set up Rust `stable`
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: ${{ matrix.toolchain }}
-          profile: minimal
-        if: "!contains(matrix.toolchain, 'stable-') && matrix.sccache"
-
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-
-      # Workaround for https://github.com/actions/cache/issues/403
-      - name: Install GNU tar
-        run: |
-          brew install gnu-tar
-          echo "PATH=/usr/local/opt/gnu-tar/libexec/gnubin:$PATH" >> $GITHUB_ENV
-        if: matrix.sccache && matrix.os == 'macos-10.15'
-
-      - name: '`.exe` suffix'
-        id: exe-suffix
-        run: |
-          if ${{ contains(matrix.os, 'windows-') }}; then
-            echo '::set-output name=suffix::.exe'
-          else
-            echo '::set-output name=suffix::'
-          fi
-        shell: bash
-        if: matrix.sccache
-
-      - name: Resolve `sccache *`
-        id: resolve-sccache
-        run: echo "::set-output name=version::$(curl https://crates.io/api/v1/crates/sccache | jq -r '.crate.max_version')"
-        shell: bash
-        if: matrix.sccache
-
-      - name: Cache for sccache
-        uses: actions/cache@v2
-        with:
-          path: |
-            ~/.cargo/.crates.toml
-            ~/.cargo/.crates2.json
-            ~/.cargo/bin/sccache${{ steps.exe-suffix.outputs.suffix }}
-          key: build-installed-crates-${{ matrix.os }}-${{ steps.resolve-sccache.outputs.version }}
-        if: matrix.sccache
-
-      - name: Install sccache v${{ steps.resolve-sccache.outputs.version }}
-        uses: actions-rs/cargo@v1
-        with:
-          command: install
-          args: sccache --version ${{ steps.resolve-sccache.outputs.version }}
-          toolchain: stable
-        if: matrix.sccache
 
       - name: cargo-clippy
         uses: actions-rs/cargo@v1
