@@ -1,0 +1,14 @@
+[workspace]
+members = ["demo"]
+
+[package]
+name = "wattbuild"
+version = "0.0.0"
+authors = ["Ryo Yamashita <qryxip@gmail.com>"]
+edition = "2018"
+description = "Builds WASI runtimes in `build.rs` for `watt`."
+license = "CC0-1.0"
+repository = "https://github.com/qryxip/wattbuild"
+keywords = ["watt"]
+categories = ["development-tools::procedural-macro-helpers"]
+publish = false
