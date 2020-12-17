@@ -135,7 +135,14 @@ jobs:
             ~/.cargo/.crates.toml
             ~/.cargo/.crates2.json
             ~/.cargo/bin/sccache${{ steps.exe-suffix.outputs.suffix }}
-          key: build-installed-crates-${{ matrix.toolchain }}-${{ steps.resolve-sccache.outputs.version }}
+          key: build-installed-crates-${{ matrix.os }}-${{ steps.resolve-sccache.outputs.version }}
+        if: matrix.sccache
+
+      - name: Install sccache v${{ steps.resolve-sccache.outputs.version }}
+        uses: actions-rs/install@v0.1
+        with:
+          crate: sccache
+          version: ${{ steps.resolve-sccache.outputs.version }}
         if: matrix.sccache
 
       - name: cargo-clippy
