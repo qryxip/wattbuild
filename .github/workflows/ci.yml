@@ -89,8 +89,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Set up `${{ matrix.toolchain }}`
-        id: install-toolchain
+      - name: Set up Rust `${{ matrix.toolchain }}`
         uses: actions-rs/toolchain@v1
         with:
           toolchain: ${{ matrix.toolchain }}
@@ -98,6 +97,13 @@ jobs:
           override: true
           profile: minimal
           components: clippy
+
+      - name: Set up Rust `stable`
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.toolchain }}
+          profile: minimal
+        if: "!contains(matrix.toolchain, 'stable-') && matrix.sccache"
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
@@ -139,10 +145,11 @@ jobs:
         if: matrix.sccache
 
       - name: Install sccache v${{ steps.resolve-sccache.outputs.version }}
-        uses: actions-rs/install@v0.1
+        uses: actions-rs/cargo@v1
         with:
-          crate: sccache
-          version: ${{ steps.resolve-sccache.outputs.version }}
+          command: install
+          args: sccache --version ${{ steps.resolve-sccache.outputs.version }}
+          toolchain: stable
         if: matrix.sccache
 
       - name: cargo-clippy
