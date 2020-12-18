@@ -17,7 +17,7 @@ def main() -> None:
     args = parser.parse_args()
 
     workdir = cache_dir() / 'wattbuild'
-    workdir.mkdir(exist_ok=True)
+    workdir.mkdir(parents=True, exist_ok=True)
 
     if args.proc_macro2_rev is None:
         rev = ''
