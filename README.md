@@ -14,9 +14,12 @@ fn main() {
     wattbuild::build(
         &[Dependency {
             package: "watt-demo",
-            source: Source::Git {
-                git: "https://github.com/dtolnay/watt",
-                rev: None,
+            source: Source::Path {
+                path: "/path/to/watt/demo/impl",
+                or: Some(Box::new(Source::Git {
+                    git: "https://github.com/dtolnay/watt",
+                    rev: None,
+                })),
             },
         }],
         None,

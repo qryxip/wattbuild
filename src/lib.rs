@@ -27,9 +27,12 @@
 //!     wattbuild::build(
 //!         &[Dependency {
 //!             package: "watt-demo",
-//!             source: Source::Git {
-//!                 git: "https://github.com/dtolnay/watt",
-//!                 rev: None,
+//!             source: Source::Path {
+//!                 path: "/path/to/watt/demo/impl",
+//!                 or: Some(Box::new(Source::Git {
+//!                     git: "https://github.com/dtolnay/watt",
+//!                     rev: None,
+//!                 })),
 //!             },
 //!         }],
 //!         None,
@@ -86,9 +89,12 @@ use std::{
 ///     wattbuild::build(
 ///         &[Dependency {
 ///             package: "watt-demo",
-///             source: Source::Git {
-///                 git: "https://github.com/dtolnay/watt",
-///                 rev: Some("de066c43e8352c9f187a075f83a7d62ddf91c422"),
+///             source: Source::Path {
+///                 path: "/path/to/watt/demo/impl",
+///                 or: Some(Box::new(Source::Git {
+///                     git: "https://github.com/dtolnay/watt",
+///                     rev: None,
+///                 })),
 ///             },
 ///         }],
 ///         Some("de066c43e8352c9f187a075f83a7d62ddf91c422"),
