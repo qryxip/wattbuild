@@ -24,7 +24,6 @@
 //! fn main() {
 //!     wattbuild::build(
 //!         &[r#"{ package = "watt-demo", git = "https://github.com/dtolnay/watt" }"#],
-//!         true,
 //!         None,
 //!         None,
 //!     );
@@ -45,6 +44,20 @@
 //!     WATT_DEMO.proc_macro("demo", input)
 //! }
 //! ```
+//!
+//! # Working directory
+//!
+//! The target crates are built under:
+//!
+//! | Platform | Working Directory                                                      |
+//! | :-       | :-                                                                     |
+//! | Linux    | `$XDG_CACHE_DIR/wattbuild` or `$HOME/.cache/wattbuild`                 |
+//! | macOS    | `$HOME/Library/Caches/wattbuild`                                       |
+//! | Windows  | `%APPDATA%\Local\wattbuild` or `%USERPROFILE%\AppData\Local\wattbuild` |
+//!
+//! # Python
+//!
+//! This crate requires Python 3.6+ in the `$PATH`.
 
 #![allow(clippy::needless_doctest_main)]
 
@@ -57,8 +70,6 @@ use std::{
 ///
 /// `dependencies` are [dependency specification](https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html)s with `package` keys.
 ///
-/// If `prefer_sccache` is `true` and `sccache(.exe)` is in `$PATH`, `$RUSTC_WRAPPER` is set to the sccache path.
-///
 /// `python_exe` defaults to `"python"` on Windows, `"python3"` on other platforms.
 ///
 /// # Example
@@ -67,19 +78,13 @@ use std::{
 /// fn main() {
 ///     wattbuild::build(
 ///         &[r#"{ package = "watt-demo", git = "https://github.com/dtolnay/watt" }"#],
-///         true,
 ///         Some("de066c43e8352c9f187a075f83a7d62ddf91c422"),
 ///         Some("/usr/bin/python3".as_ref()),
 ///     );
 /// }
 /// ```
-pub fn build(
-    dependencies: &[&str],
-    prefer_sccache: bool,
-    proc_macro2_rev: Option<&str>,
-    python_exe: Option<&Path>,
-) -> ! {
-    if let Err(err) = run(dependencies, prefer_sccache, proc_macro2_rev, python_exe) {
+pub fn build(dependencies: &[&str], proc_macro2_rev: Option<&str>, python_exe: Option<&Path>) -> ! {
+    if let Err(err) = run(dependencies, proc_macro2_rev, python_exe) {
         let mut errs = err.into_iter();
         if let Some(err) = errs.next() {
             eprintln!("Error: {}", err);
@@ -94,7 +99,6 @@ pub fn build(
 
 fn run(
     dependencies: &[&str],
-    prefer_sccache: bool,
     proc_macro2_rev: Option<&str>,
     python_exe: Option<&Path>,
 ) -> Result<(), Vec<String>> {
@@ -102,9 +106,6 @@ fn run(
         python_exe.unwrap_or_else(|| (if cfg!(windows) { "python" } else { "python3" }).as_ref());
 
     let mut args = dependencies.to_owned();
-    if prefer_sccache {
-        args.push("--prefer-sccache");
-    }
     if let Some(proc_macro2_rev) = proc_macro2_rev {
         args.push("--proc-macro2-rev");
         args.push(proc_macro2_rev);
