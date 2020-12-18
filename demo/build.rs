@@ -1,6 +1,14 @@
+use wattbuild::{Dependency, Source};
+
 fn main() {
     wattbuild::build(
-        &[r#"{ package = "watt-demo", git = "https://github.com/dtolnay/watt" }"#],
+        &[Dependency {
+            package: "watt-demo",
+            source: Source::Git {
+                git: "https://github.com/dtolnay/watt",
+                rev: None,
+            },
+        }],
         None,
         None,
     );
