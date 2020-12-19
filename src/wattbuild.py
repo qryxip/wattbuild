@@ -1,5 +1,6 @@
 import itertools
 import json
+import logging
 import os
 import platform
 import shutil
@@ -15,6 +16,15 @@ def main() -> None:
     parser.add_argument('--proc-macro2-rev', nargs='?', default=None)
     parser.add_argument('build_dependencies', nargs='+')
     args = parser.parse_args()
+
+    logger = logging.getLogger()
+
+    env = os.environ.copy()
+
+    if Path(os.environ['CARGO']).stem != 'cargo':
+        cargo_exe = str(Path(os.environ['CARGO']).with_stem('cargo'))
+        logger.warning(f'`{os.environ["CARGO"]}` → `{cargo_exe}`')
+        env['CARGO'] = cargo_exe
 
     workdir = cache_dir() / 'wattbuild'
     workdir.mkdir(parents=True, exist_ok=True)
@@ -49,11 +59,11 @@ def main() -> None:
     with open(workdir / 'src' / 'lib.rs', 'w') as file:
         file.write('')
 
-    subprocess.run([os.environ['CARGO'], 'update'], cwd=workdir, check=True)
+    subprocess.run([env['CARGO'], 'update'], cwd=workdir, env=env, check=True)
 
     metadata = json.loads(subprocess.run(
-        [os.environ['CARGO'], 'metadata', '--format-version', '1'],
-        stdout=PIPE, cwd=workdir, check=True,
+        [env['CARGO'], 'metadata', '--format-version', '1'],
+        stdout=PIPE, cwd=workdir, env=env, check=True,
     ).stdout.decode())
 
     node = next(node for node in metadata['resolve']['nodes']
@@ -63,13 +73,13 @@ def main() -> None:
                           if package['id'] in node['dependencies']]
 
     subprocess.run(
-        [os.environ['CARGO'], 'build', '--release',
+        [env['CARGO'], 'build', '--release',
          *itertools.chain.from_iterable(
              ['-p', f'{package["name"]}:{package["version"]}']
              for package in build_dependencies
          ),
          '--target', 'wasm32-unknown-unknown'],
-        stdout=PIPE, cwd=workdir, check=True,
+        stdout=PIPE, cwd=workdir, env=env, check=True,
     )
 
     for path in Path(metadata['target_directory'], 'wasm32-unknown-unknown',
