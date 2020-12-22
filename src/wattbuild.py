@@ -24,6 +24,11 @@ def main() -> None:
 
     if Path(os.environ['CARGO']).stem != 'cargo':
         cargo_exe = str(Path(os.environ['CARGO']).with_stem('cargo'))
+        if not Path(cargo_exe).exists():
+            which_cargo = shutil.which('cargo')
+            if which_cargo is None:
+                raise Exception('`cargo` not found')
+            cargo_exe = which_cargo
         logger.warning(f'`{os.environ["CARGO"]}` → `{cargo_exe}`')
         env['CARGO'] = cargo_exe
 
