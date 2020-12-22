@@ -22,19 +22,28 @@ def main() -> None:
 
     env = os.environ.copy()
 
-    if Path(os.environ['CARGO']).stem != 'cargo':
-        cargo_exe = str(Path(os.environ['CARGO']).with_stem('cargo'))
-        if not Path(cargo_exe).exists():
-            which_cargo = shutil.which('cargo')
-            if which_cargo is None:
-                raise Exception('`cargo` not found')
-            cargo_exe = which_cargo
-        logger.warning(f'`{os.environ["CARGO"]}` → `{cargo_exe}`')
-        env['CARGO'] = cargo_exe
-
     if args.toolchain:
-        cargo_command = ['rustup', 'run', args.toolchain, 'cargo']
+        rustup_exe = shutil.which('rustup')
+        if rustup_exe is None:
+            raise Exception('`rustup` not found')
+
+        env['CARGO'] = subprocess.run(
+            [rustup_exe, 'which', 'cargo', '--toolchain', args.toolchain],
+            stdout=PIPE, check=True,
+        ).stdout.decode()
+
+        cargo_command = [rustup_exe, 'run', args.toolchain, 'cargo']
     else:
+        if Path(os.environ['CARGO']).stem != 'cargo':
+            cargo_exe = str(Path(os.environ['CARGO']).with_stem('cargo'))
+            if not Path(cargo_exe).exists():
+                which_cargo = shutil.which('cargo')
+                if which_cargo is None:
+                    raise Exception('`cargo` not found')
+                cargo_exe = which_cargo
+            logger.warning(f'`{os.environ["CARGO"]}` → `{cargo_exe}`')
+            env['CARGO'] = cargo_exe
+
         cargo_command = [env['CARGO']]
 
     workdir = cache_dir() / 'wattbuild'
