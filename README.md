@@ -22,8 +22,9 @@ fn main() {
                 })),
             },
         }],
-        None,
-        None,
+        Some("de066c43e8352c9f187a075f83a7d62ddf91c422"),
+        Some("stable"),
+        Some("/usr/bin/python3".as_ref()),
     );
 }
 ```

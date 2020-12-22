@@ -37,23 +37,28 @@
 //!         }],
 //!         None,
 //!         None,
+//!         None,
 //!     );
 //! }
 //! ```
 //!
 //! And in `lib.rs`:
 //!
-//! ```ignore
+//! ```
+//! # extern crate proc_macro;
+//! # macro_rules! include_bytes(($($_tt:tt)*) => (b""));
 //! use proc_macro::TokenStream;
 //! use watt::WasmMacro;
 //!
 //! static WATT_DEMO: WasmMacro =
 //!     WasmMacro::new(include_bytes!(concat!(env!("OUT_DIR"), "/watt_demo.wasm")));
 //!
+//! # const _: &str = stringify! {
 //! #[proc_macro_derive(Demo)]
 //! pub fn demo(input: TokenStream) -> TokenStream {
 //!     WATT_DEMO.proc_macro("demo", input)
 //! }
+//! # };
 //! ```
 //!
 //! # Working directory
@@ -98,6 +103,7 @@ use std::{
 ///             },
 ///         }],
 ///         Some("de066c43e8352c9f187a075f83a7d62ddf91c422"),
+///         Some("stable"),
 ///         Some("/usr/bin/python3".as_ref()),
 ///     );
 /// }
@@ -105,9 +111,10 @@ use std::{
 pub fn build(
     dependencies: &[Dependency],
     proc_macro2_rev: Option<&str>,
+    toolchain: Option<&str>,
     python_exe: Option<&Path>,
 ) -> ! {
-    if let Err(err) = run(dependencies, proc_macro2_rev, python_exe) {
+    if let Err(err) = run(dependencies, proc_macro2_rev, toolchain, python_exe) {
         let mut errs = err.into_iter();
         if let Some(err) = errs.next() {
             eprintln!("Error: {}", err);
@@ -123,6 +130,7 @@ pub fn build(
 fn run(
     dependencies: &[Dependency],
     proc_macro2_rev: Option<&str>,
+    toolchain: Option<&str>,
     python_exe: Option<&Path>,
 ) -> Result<(), Vec<String>> {
     let python_exe =
@@ -132,6 +140,10 @@ fn run(
         .iter()
         .map(|d| d.to_specification())
         .collect::<Result<Vec<_>, _>>()?;
+    if let Some(toolchain) = toolchain {
+        args.push("--toolchain".to_owned());
+        args.push(toolchain.to_owned());
+    }
     if let Some(proc_macro2_rev) = proc_macro2_rev {
         args.push("--proc-macro2-rev".to_owned());
         args.push(proc_macro2_rev.to_owned());

@@ -13,6 +13,7 @@ from subprocess import PIPE
 
 def main() -> None:
     parser = ArgumentParser()
+    parser.add_argument('--toolchain')
     parser.add_argument('--proc-macro2-rev', nargs='?', default=None)
     parser.add_argument('build_dependencies', nargs='+')
     args = parser.parse_args()
@@ -25,6 +26,11 @@ def main() -> None:
         cargo_exe = str(Path(os.environ['CARGO']).with_stem('cargo'))
         logger.warning(f'`{os.environ["CARGO"]}` → `{cargo_exe}`')
         env['CARGO'] = cargo_exe
+
+    if args.toolchain:
+        cargo_command = ['rustup', 'run', args.toolchain, 'cargo']
+    else:
+        cargo_command = [env['CARGO']]
 
     workdir = cache_dir() / 'wattbuild'
     workdir.mkdir(parents=True, exist_ok=True)
@@ -59,10 +65,11 @@ def main() -> None:
     with open(workdir / 'src' / 'lib.rs', 'w') as file:
         file.write('')
 
-    subprocess.run([env['CARGO'], 'update'], cwd=workdir, env=env, check=True)
+    subprocess.run([*cargo_command, 'update'],
+                   cwd=workdir, env=env, check=True)
 
     metadata = json.loads(subprocess.run(
-        [env['CARGO'], 'metadata', '--format-version', '1'],
+        [*cargo_command, 'metadata', '--format-version', '1'],
         stdout=PIPE, cwd=workdir, env=env, check=True,
     ).stdout.decode())
 
@@ -73,7 +80,7 @@ def main() -> None:
                           if package['id'] in node['dependencies']]
 
     subprocess.run(
-        [env['CARGO'], 'build', '--release',
+        [*cargo_command, 'build', '--release',
          *itertools.chain.from_iterable(
              ['-p', f'{package["name"]}:{package["version"]}']
              for package in build_dependencies

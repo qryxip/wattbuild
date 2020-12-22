@@ -12,3 +12,6 @@ repository = "https://github.com/qryxip/wattbuild"
 keywords = ["watt"]
 categories = ["development-tools::procedural-macro-helpers"]
 publish = false
+
+[dev-dependencies]
+watt = "0.4.0"
